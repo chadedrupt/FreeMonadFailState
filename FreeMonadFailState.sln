@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29411.108
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FreeMonadFailState", "FreeMonadFailState\FreeMonadFailState.csproj", "{2AAA0899-6663-42FD-83E4-76BAF8E419AD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMonadFailStateTests", "FreeMonadFailStateTests\FreeMonadFailStateTests.csproj", "{A0B4D769-5100-4A63-83CB-B6DB07F98AD6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2AAA0899-6663-42FD-83E4-76BAF8E419AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AAA0899-6663-42FD-83E4-76BAF8E419AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AAA0899-6663-42FD-83E4-76BAF8E419AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AAA0899-6663-42FD-83E4-76BAF8E419AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0B4D769-5100-4A63-83CB-B6DB07F98AD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0B4D769-5100-4A63-83CB-B6DB07F98AD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0B4D769-5100-4A63-83CB-B6DB07F98AD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0B4D769-5100-4A63-83CB-B6DB07F98AD6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B28B58BE-BE6C-43AC-9549-272898B5D20E}
+	EndGlobalSection
+EndGlobal

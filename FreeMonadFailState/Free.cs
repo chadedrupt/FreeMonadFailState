@@ -1,0 +1,82 @@
+﻿using LanguageExt;
+using System;
+
+namespace FreeMonadFailState
+{
+    public static partial class Free
+    {
+        public static Free<A> Return<A>(A value) => new Free<A>.Return(value);
+        public static Free<A> Fail<A>(Exception error) => new Free<A>.Fail(error);
+        public static Free<Unit> SomeAsyncThing(string message) => new Free<Unit>.SomeAsyncThing(message, Return, Fail<Unit>);
+    }
+
+    public abstract partial class Free<A>
+    {
+        internal class Return : Free<A>
+        {
+            public readonly A Value;
+            public Return(A value) => Value = value;
+        }
+
+        internal class Fail : Free<A>
+        {
+            public readonly Exception Exception;
+            public Fail(Exception exception) => Exception = exception;
+        }
+
+        internal class SomeAsyncThing : Free<A>
+        {
+            public readonly string Message;
+            public readonly Func<Unit, Free<A>> Next;
+            public readonly Func<Exception, Free<A>> FailNext;
+            public SomeAsyncThing(
+                string message,
+                Func<Unit, Free<A>> next,
+                Func<Exception, Free<A>> failNext
+            )
+            {
+                Message = message;
+                Next = next;
+                FailNext = failNext;
+            }
+        }
+
+    }
+
+    public static partial class FreeExtensions
+    {
+
+        public static Free<B> Bind<A, B>(this Free<A> ma, Func<A, Free<B>> f) => ma switch
+        {
+            Free<A>.Return rt => f(rt.Value),
+            Free<A>.Fail fa => new Free<B>.Fail(fa.Exception),
+            Free<A>.SomeAsyncThing a => new Free<B>.SomeAsyncThing(a.Message, n => a.Next(n).Bind(f), e => a.FailNext(e).Bind(f)),
+            _ => default
+        };
+
+        public static Free<B> BiBind<A, B>(this Free<A> ma, Func<A, Free<B>> Succ, Func<Exception, Free<B>> Fail) => ma switch
+        {
+            Free<A>.Return rt => Succ(rt.Value),
+            Free<A>.Fail fa => Fail(fa.Exception),
+            Free<A>.SomeAsyncThing a => new Free<B>.SomeAsyncThing(a.Message, n => a.Next(n).BiBind(Succ, Fail), e => a.FailNext(e).BiBind(Succ, Fail)),
+            _ => default
+        };
+
+        public static Free<B> Map<A, B>(this Free<A> ma, Func<A, B> f) =>
+            ma.Bind(a => Free.Return(f(a)));
+
+        public static Free<B> BiMap<A, B>(this Free<A> ma, Func<A, B> Succ, Func<Exception, B> Fail) =>
+            ma.BiBind(
+                Succ: a => Free.Return(Succ(a)),
+                Fail: e => Free.Return(Fail(e))
+            );
+
+        public static Free<B> Select<A, B>(this Free<A> ma, Func<A, B> f) =>
+            ma.Bind(a => Free.Return(f(a)));
+
+        public static Free<C> SelectMany<A, B, C>(this Free<A> ma, Func<A, Free<B>> bind, Func<A, B, C> project) =>
+            ma.Bind(a => bind(a).Select(b => project(a, b)));
+
+    }
+
+}
