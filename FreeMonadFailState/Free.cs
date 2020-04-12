@@ -1,5 +1,6 @@
-﻿using LanguageExt;
-using System;
+﻿using System;
+using LanguageExt;
+using static LanguageExt.Prelude;
 
 namespace FreeMonadFailState
 {
@@ -50,7 +51,7 @@ namespace FreeMonadFailState
         {
             Free<A>.Return rt => f(rt.Value),
             Free<A>.Fail fa => new Free<B>.Fail(fa.Exception),
-            Free<A>.SomeAsyncThing a => new Free<B>.SomeAsyncThing(a.Message, n => a.Next(n).Bind(f), e => a.FailNext(e).Bind(f)),
+            Free<A>.SomeAsyncThing a => new Free<B>.SomeAsyncThing(a.Message, n => a.Next(n).Map(f).Flatten(), e => a.FailNext(e).Map(f).Flatten()),
             _ => default
         };
 
@@ -58,21 +59,31 @@ namespace FreeMonadFailState
         {
             Free<A>.Return rt => Succ(rt.Value),
             Free<A>.Fail fa => Fail(fa.Exception),
-            Free<A>.SomeAsyncThing a => new Free<B>.SomeAsyncThing(a.Message, n => a.Next(n).BiBind(Succ, Fail), e => a.FailNext(e).BiBind(Succ, Fail)),
+            Free<A>.SomeAsyncThing a => new Free<B>.SomeAsyncThing(a.Message, n => a.Next(n).BiMap(Succ, Fail).Flatten(), e => a.FailNext(e).BiMap(Succ, Fail).Flatten()),
             _ => default
         };
 
-        public static Free<B> Map<A, B>(this Free<A> ma, Func<A, B> f) =>
-            ma.Bind(a => Free.Return(f(a)));
+        public static Free<B> Map<A, B>(this Free<A> ma, Func<A, B> f) => ma switch
+        {
+            Free<A>.Return rt => new Free<B>.Return(f(rt.Value)),
+            Free<A>.Fail fa => new Free<B>.Fail(fa.Exception),
+            Free<A>.SomeAsyncThing a => new Free<B>.SomeAsyncThing(a.Message, n => a.Next(n).Map(f), e => a.FailNext(e).Map(f)),
+            _ => default
+        };
 
-        public static Free<B> BiMap<A, B>(this Free<A> ma, Func<A, B> Succ, Func<Exception, B> Fail) =>
-            ma.BiBind(
-                Succ: a => Free.Return(Succ(a)),
-                Fail: e => Free.Return(Fail(e))
-            );
+        public static Free<B> BiMap<A, B>(this Free<A> ma, Func<A, B> Succ, Func<Exception, B> Fail) => ma switch
+        {
+            Free<A>.Return rt => new Free<B>.Return(Succ(rt.Value)),
+            Free<A>.Fail fa => new Free<B>.Return(Fail(fa.Exception)),
+            Free<A>.SomeAsyncThing a => new Free<B>.SomeAsyncThing(a.Message, n => a.Next(n).BiMap(Succ, Fail), e => a.FailNext(e).BiMap(Succ, Fail)),
+            _ => default
+        };
+
+        public static Free<A> Flatten<A>(this Free<Free<A>> ma) =>
+            ma.Bind(identity);
 
         public static Free<B> Select<A, B>(this Free<A> ma, Func<A, B> f) =>
-            ma.Bind(a => Free.Return(f(a)));
+            ma.Map(f);
 
         public static Free<C> SelectMany<A, B, C>(this Free<A> ma, Func<A, Free<B>> bind, Func<A, B, C> project) =>
             ma.Bind(a => bind(a).Select(b => project(a, b)));
